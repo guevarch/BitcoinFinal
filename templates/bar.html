@@ -10,10 +10,10 @@
         }
         
         body {
-            background-color: #272b34;
+            background-color: #e9eaee;
             font-family: 'Khula', sans-serif;
             font-weight: 300;
-            color: white;
+            color: rgb(21, 20, 20);
             line-height: 1em;
             margin: 0;
             padding: 2em 1em;
@@ -27,21 +27,13 @@
         }
 
         #chart2,
-        #chart3 {
+        #chart3,
+        #chart4,
+        #chart5,
+        #chart6 {
             margin-top: 50px;
         }
 
-        .container {
-        display: flex;
-        flex-wrap: wrap;
-        justify-content: space-between;
-    }
-    
-        .chart {
-        width: 30%;
-        margin-bottom: 20px;
-        background-color: #f2f2f2;
-    }
     </style>
 
 </head>
@@ -50,26 +42,14 @@
     <h1>Hey Geeks Viewers</h1>
     <script src='https://cdn.plot.ly/plotly-latest.min.js'></script>
 
-    <div class="container">
-        <div id='chart4' class='chart'></div>
-        <div id='chart5' class='chart'></div>
-        <div id='chart6' class='chart'></div>
-
-        <script type='text/javascript'>
-            var graphs = {{Indicators | safe}};
-            Plotly.plot('chart4',graphs,{});
-            // Load the second graph from JSON file
-            var graphs = {{Movingaverages | safe}};
-            Plotly.plot('chart5',graphs,{});
-            var graphs = {{MACD | safe}};
-            Plotly.plot('chart6',graphs,{});
-        </script>
-    </div>
-
 
 	<div id='chart1' class='chart'></div>
     <div id='chart2' class='chart'></div>
     <div id='chart3' class='chart'></div>
+    <div id='chart4' class='chart'></div>
+    <div id='chart5' class='chart'></div>
+    <div id='chart6' class='chart'></div>
+    <div id='chart7' class='chart'></div>
     
     <script type='text/javascript'>
 		var graphs = {{Buyzones | safe}};
@@ -79,9 +59,17 @@
 		Plotly.plot('chart2',graphs,{});
         var graphs = {{MACD | safe}};
 		Plotly.plot('chart3',graphs,{});
+        var graphs = {{YTD | safe}};
+		Plotly.plot('chart4',graphs,{});
+        var graphs = {{corr1 | safe}};
+		Plotly.plot('chart5',graphs,{});
+        var graphs = {{corr2 | safe}};
+		Plotly.plot('chart6',graphs,{});
+        var graphs = {{Movingaverages2 | safe}};
+		Plotly.plot('chart7',graphs,{});
+    </script>
     </script>
 		
 </body>
 </html>
-
 

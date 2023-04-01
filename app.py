@@ -35,6 +35,7 @@ def bar_with_plotly():
 	df['200D'] = df['price'].rolling(200).mean()
 	df['300D'] = df['price'].rolling(300).mean()
 	df['50D'] = df['price'].rolling(50).mean()
+	df['7D'] = df['price'].rolling(7).mean()
 	# df = df.dropna()
 	df['meanavge'] = (df['200D'] + df['300D'] + df['50D'] )/3
 	# df = df.drop(columns=['200D','300D', '50D'])
@@ -237,8 +238,158 @@ def bar_with_plotly():
 
 	Indicators = json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
 
-	return render_template('bar.html', Buyzones=Buyzones, Movingaverages=Movingaverages, MACD=MACD,Indicators=Indicators)
+	# YTD
 
+	def get_ytd_returns(ticker):
+		df = yf.Ticker(ticker).history(period='ytd',interval='1d',actions=False).reset_index()
+		ytd_return = ((df.Close.iloc[-1]/df.Close.iloc[0])-1)
+		return ytd_return
+
+	tickers = ['BTC-USD', 'GC=F', 'Cl=F', 'TLT', 'DX=F', '^RUT', '^GSPC', '^IXIC', '^DJI', 'BIGPX']
+	asset_names = ['Bitcoin', 'Gold', 'Oil', '20yr Treasury', 'DXY', 'Russell 2000 Index', 'S&P 500', 'NASDAQ', 'Dow Jones', '60/40']
+
+	data = [[asset_name, get_ytd_returns(ticker)*100] for asset_name, ticker in zip(asset_names, tickers)]
+
+	# Create the pandas DataFrame
+	data = pd.DataFrame(data, columns=['Asset', 'YTD%'])
+	data['YTD%'] = data['YTD%'].round(2)
+
+	fig = px.bar(data, x='YTD%', y='Asset', orientation='h', text=str("YTD%"), color="YTD%",color_continuous_scale=px.colors.sequential.Oryel)
+	fig.layout.yaxis.tickformat = ',.%'
+	fig.update_layout(title_text='Year To Date Returns')
+	fig.update_layout(yaxis=dict(showticklabels=True))
+	fig.update_layout(height=500, width=1000, title_text="YTD Returns")
+
+	YTD = json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
+
+	# Corr
+
+	tickers_list = ['BTC-USD','DX=F', '^GSPC', '^IXIC', 'GC=F']
+
+	# Fetch data for all tickers using a for loop
+	data = {}
+	for ticker in tickers_list:
+		data[ticker] = yf.Ticker(ticker).history(period='3mo', interval='1d', actions=False)['Close']
+
+	# Filter out NaN values using list comprehension
+	data = {ticker: close[~close.isna()] for ticker, close in data.items()}
+
+	# Merge data using inner join
+	merge = pd.concat(data, axis=1, join='inner')
+	merge.columns = [ticker for ticker, close in data.items()]
+
+	# Rename columns
+	merge = merge.rename(columns={"BTC-USD": "BTC", "DX=F": "DXY", "^GSPC": "S&P500", "^IXIC": "Nasdaq", "GC=F": "Gold"})
+	assets = [('DXY', 'DXY/BTC'), ('S&P500', 'S&P500/BTC'), ('Nasdaq', 'Nasdaq/BTC'), ('Gold', 'Gold/BTC')]
+
+	# Use a for loop to calculate the correlation for each asset pair
+	correlations = {}
+	for asset, col_name in assets:
+		correlations[col_name] = merge['BTC'].rolling(3).corr(merge[asset])
+
+	# Use the assign method to add the correlations as new columns to the DataFrame
+	merge = merge.assign(**correlations).dropna().reset_index()
+	corr_matrix=merge.drop(columns=['DXY/BTC','S&P500/BTC', 'Nasdaq/BTC', 'Gold/BTC'])
+	corr_matrix = corr_matrix.corr().round(2)
+	fig = px.imshow(corr_matrix,color_continuous_scale='Oryel', text_auto=True, aspect="auto")
+	fig.update_layout(height=500, width=1000, title_text="Correlation Matrix")
+	corr1 = json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
+
+	merge=merge.tail(30)
+	fig = make_subplots(
+		rows=4, cols=1,start_cell="bottom-left",shared_xaxes=True, vertical_spacing=0.01, row_heights=[0.04, 0.04,0.04,0.04],
+		subplot_titles=("DXY/BTC", "S&P500/BTC", "Nasdaq/BTC", "Gold/BTC"))
+
+	fig.add_trace(go.Bar(x=merge['Date'], y=merge['DXY/BTC'],
+						marker=dict(color=merge['DXY/BTC'], coloraxis="coloraxis")),
+				1, 1)
+	fig.add_trace(go.Bar(x=merge['Date'], y=merge['S&P500/BTC'],
+						marker=dict(color=merge['S&P500/BTC'], coloraxis="coloraxis")),
+				2, 1)
+
+	fig.add_trace(go.Bar(x=merge['Date'], y=merge['Nasdaq/BTC'],
+						marker=dict(color=merge['Nasdaq/BTC'], coloraxis="coloraxis")),
+				3, 1)
+
+	fig.add_trace(go.Bar(x=merge['Date'], y=merge['Gold/BTC'],
+						marker=dict(color=merge['Gold/BTC'], coloraxis="coloraxis")),
+				4, 1)
+	fig.update_layout(
+		margin=dict(l=20, r=20, t=70, b=20),
+	)
+	fig.update_layout(coloraxis=dict(colorscale='Oryel'), showlegend=False)
+	fig.update_yaxes(nticks=3)
+	fig.update_xaxes(nticks=25)
+	fig.update_layout(height=500, width=1000, title_text="30 Day Correlation")
+
+	corr2 = json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
+
+	# Moving Averages
+
+	fig = go.Figure()
+
+	fig.add_trace(go.Indicator(
+		mode = "number+delta",
+		number = {'prefix': "$"},
+		value = df['200D'].iloc[-1],
+		delta = {"reference": ((df['200D'].iloc[-2])), "valueformat": ".0f"},
+		title = {"text": "200 Day Moving Average"},
+		gauge = {
+			'axis': {'visible': False}},
+		domain = {'row': 0, 'column': 0}))
+
+	fig.add_trace(go.Indicator(
+		mode = "number+delta",
+		number = {'prefix': "$"},
+		value = df['meanavge'].iloc[-1],
+		delta = {"reference": ((df['meanavge'].iloc[-2])), "valueformat": ".0f"},
+		title = {"text": "Meanaverage"},
+		gauge = {
+			'axis': {'visible': False}},
+		domain = {'row': 1, 'column': 0}))
+
+
+	fig.add_trace(go.Indicator(
+		mode = "number+delta",
+		number = {'prefix': "$"},
+		value = df['50D'].iloc[-1],
+		delta = {"reference": ((df['50D'].iloc[-2])), "valueformat": ".0f"},
+		title = {"text": "50 Day Moving Average"},
+		domain = {'row': 0, 'column': 1}))
+
+	fig.add_trace(go.Indicator(
+		mode = "number+delta",
+		number = {'prefix': "$"},
+		value = df['300D'].iloc[-1],
+		delta = {"reference": ((df['300D'].iloc[-2])), "valueformat": ".0f"},
+		title = {"text": "300 Day Moving Average"},
+		domain = {'row': 1, 'column': 1}))
+
+	fig.add_trace(go.Indicator(
+		mode = "number+delta",
+		number = {'prefix': "$"},
+		value = df['price'].iloc[-1],
+		delta = {"reference": ((df['price'].iloc[-2])), "valueformat": ".0f"},
+		title = {"text": "Current Price"},
+		domain = {'row': 0, 'column': 2}))
+
+	fig.add_trace(go.Indicator(
+		mode = "number+delta",
+		number = {'prefix': "$"},
+		value = df['7D'].iloc[-1],
+		delta = {"reference": ((df['7D'].iloc[-2])), "valueformat": ".0f"},
+		title = {"text": "7 Day Moving Average"},
+		domain = {'row': 1, 'column': 2}))
+
+	fig.update_layout(
+		grid = {'rows': 2, 'columns': 3, 'pattern': "independent"},
+	)
+	fig.update_layout(height=500, width=1000, title_text="Moving Averages")
+	Movingaverages2 = json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
+
+	return render_template('bar.html',Movingaverages2=Movingaverages2,corr2=corr2,corr1=corr1,YTD=YTD, Buyzones=Buyzones, Movingaverages=Movingaverages, MACD=MACD,Indicators=Indicators)
+
+	
 if __name__ == '__main__':
 	app.run(debug=True)
 
