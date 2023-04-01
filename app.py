@@ -4,14 +4,16 @@ import pandas as pd
 import json
 import plotly
 import plotly.express as px
-
+import pandas_ta as pta
+from plotly.subplots import make_subplots
+import plotly.graph_objects as go
 from datetime import date
 from datetime import timedelta, date
 from prophet import Prophet
 import pandas as pd
 import numpy as np
 import yfinance as yf
-import plotly.graph_objects as go
+
 
 # Create Home Page Route
 app = Flask(__name__)
@@ -117,6 +119,7 @@ def bar_with_plotly():
 	fig.update_layout(
 		margin=dict(l=20, r=100, t=70, b=20),
 	)
+	fig.update_layout(height=500, width=1000)
 	fig.update_layout(showlegend=False)
 	fig.add_vline(x='2012-11-28', line_width=3, line_dash="dash", line_color="green")
 	fig.add_vline(x='2016-07-09', line_width=3, line_dash="dash", line_color="green")	
@@ -139,9 +142,8 @@ def bar_with_plotly():
 	fig.update_xaxes(ticklabelposition="inside top", title="Date")
 	fig.update_yaxes(nticks=12)
 	fig.update_xaxes(nticks=50)
-	fig.update_layout(
-		margin=dict(l=20, r=100, t=70, b=20),
-	)
+	fig.update_layout(margin=dict(l=20, r=100, t=70, b=20))
+	fig.update_layout(height=500, width=1000)
 	fig.update_layout(showlegend=True)
 	fig.add_vline(x='2012-11-28', line_width=3, line_dash="dash", line_color="green")
 	fig.add_vline(x='2016-07-09', line_width=3, line_dash="dash", line_color="green")	
@@ -150,8 +152,59 @@ def bar_with_plotly():
 
 	Movingaverages = json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
 	
+	# MACD
 
-	return render_template('bar.html', Buyzones=Buyzones, Movingaverages=Movingaverages)
+	df_tail=df.dropna()
+	df_tail = df_tail.tail(360)
+	df_tail.head()
+
+	df_tail['RSI'] = pta.rsi(df_tail['price'], length = 14)
+
+	fig = make_subplots(rows=4, cols=1,shared_xaxes=True,vertical_spacing=0.01, row_heights=[0.2, 0.04,0.04,0.04])
+
+	fig.add_trace(
+		go.Scatter(name="Price",x=df_tail['date'], y=df_tail['price'],
+			marker=dict(color=df_tail['macd'], coloraxis="coloraxis1")),
+		row=1, col=1)
+
+
+	fig.add_trace(
+		go.Bar(name="macd",x=df_tail['date'], y=df_tail['macd'],
+		marker=dict(color=df_tail['macd'], coloraxis="coloraxis1")),
+		row=2, col=1)
+
+	fig.add_trace(
+		go.Scatter(name="macd_s",x=df_tail['date'], y=df_tail['macd_s'],
+		marker=dict(color=df_tail['macd_s'], coloraxis="coloraxis1")),
+		row=2, col=1)
+
+	fig.add_trace(
+		go.Scatter(name="macd_h",x=df_tail['date'], y=df_tail['macd_h'],
+		marker=dict(color=df_tail['macd_h'], coloraxis="coloraxis1")),
+		row=2, col=1)
+
+	fig.add_trace(go.Bar(x=df_tail['date'], y=df_tail['move%'],
+						marker=dict(color=df_tail['move%'], coloraxis="coloraxis2")),
+				3, 1)
+
+	fig.add_trace(
+		go.Scatter(name="RSI",x=df_tail['date'], y=df_tail['RSI'],
+		marker=dict(color=df_tail['RSI'], coloraxis="coloraxis3")),
+		row=4, col=1)
+
+	fig.update_yaxes(nticks=10)
+	fig.update_xaxes(nticks=50)
+	fig.update_layout(coloraxis1=dict(colorscale='Bluered_r'), showlegend=True)
+	fig.update_layout(coloraxis2=dict(colorscale='Bluered_r'), showlegend=True)
+	fig.update_layout(coloraxis3=dict(colorscale='Bluered_r'), showlegend=True)
+	fig.update_layout(coloraxis1_showscale=False)
+	fig.update_layout(coloraxis2_showscale=False)
+	fig.update_layout(height=700, width=1000, title_text="720 Day MACD, RSI, Price and Move%")
+	fig.update_layout(template='plotly_dark')
+
+	MACD = json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
+
+	return render_template('bar.html', Buyzones=Buyzones, Movingaverages=Movingaverages, MACD=MACD)
 
 if __name__ == '__main__':
 	app.run(debug=True)

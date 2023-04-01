@@ -18,12 +18,21 @@
             margin: 0;
             padding: 2em 1em;
         }
-		.chart {
+        .chart {
+            display: flex;
+            justify-content: center;
+            align-items: center;
             margin-bottom: 50px;
         }
-        #chart2 {
+
+        #chart2,
+        #chart3 {
             margin-top: 50px;
         }
+
+
+
+
     </style>
 </head>
 <body>
@@ -31,12 +40,16 @@
     <script src='https://cdn.plot.ly/plotly-latest.min.js'></script>
 	<div id='chart1' class='chart'></div>
     <div id='chart2' class='chart'></div>
+    <div id='chart3' class='chart'></div>
+    
     <script type='text/javascript'>
 		var graphs = {{Buyzones | safe}};
 		Plotly.plot('chart1',graphs,{});
         // Load the second graph from JSON file
 		var graphs = {{Movingaverages | safe}};
 		Plotly.plot('chart2',graphs,{});
+        var graphs = {{MACD | safe}};
+		Plotly.plot('chart3',graphs,{});
     </script>
 		
 </body>
