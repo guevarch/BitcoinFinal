@@ -204,7 +204,40 @@ def bar_with_plotly():
 
 	MACD = json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
 
-	return render_template('bar.html', Buyzones=Buyzones, Movingaverages=Movingaverages, MACD=MACD)
+
+	#Indicators
+	fig = go.Figure(go.Indicator(
+    mode = "gauge+number",
+    title = {'text': "Current Valuation - Standard Deviation percent move from meanaverage", 'font': {'size': 15}},
+    value = df['move%'].iloc[-1],
+    domain = {'x': [0,1], 'y': [0,1]},
+    gauge = {
+        'axis': {'range': [-0.43, 0.43], 'tickwidth': 1, 'tickcolor': "orange"},
+        'bar': {'color': "orange"},
+        'bgcolor': "white",
+        'borderwidth': 2,
+        'bordercolor': "white",
+        'steps': [
+            {'range': [-0.43, -0.18], 'color': 'red'},
+            {'range': [-0.18, 0], 'color': 'yellow'},
+            {'range': [0, 0.18], 'color': 'blue'},
+            {'range': [0.18,0.43], 'color': 'green'}],
+        }))
+
+	fig.update_layout(
+		font={'color': "black", 'family': "Arial"},
+		xaxis={'showgrid': False, 'range':[-1,1]},
+		yaxis={'showgrid': False, 'range':[0,1.11]},
+		plot_bgcolor='rgba(0,0,0,0)'
+		)
+	# Set the visibility ON
+	fig.update_yaxes(title='', visible=True, showticklabels=False)
+	# Set the visibility OFF
+	fig.update_xaxes(title='x', visible=False, showticklabels=False)
+
+	Indicators = json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
+
+	return render_template('bar.html', Buyzones=Buyzones, Movingaverages=Movingaverages, MACD=MACD,Indicators=Indicators)
 
 if __name__ == '__main__':
 	app.run(debug=True)
