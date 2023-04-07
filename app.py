@@ -13,6 +13,10 @@ from prophet import Prophet
 import pandas as pd
 import numpy as np
 import yfinance as yf
+import seaborn as sns
+import mpld3
+import matplotlib.pyplot as plt
+
 
 
 # Create Home Page Route
@@ -291,10 +295,10 @@ def bar_with_plotly():
 	merge = merge.assign(**correlations).dropna().reset_index()
 	corr_matrix=merge.drop(columns=['DXY/BTC','S&P500/BTC', 'Nasdaq/BTC', 'Gold/BTC'])
 	corr_matrix = corr_matrix.corr().round(2)
-	fig = px.imshow(corr_matrix,color_continuous_scale='Oryel', text_auto=True, aspect="auto")
-	fig.update_layout(height=500, width=1000, title_text="Correlation Matrix")
-	corr1 = json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
-
+	corr_matrix = px.imshow(corr_matrix,color_continuous_scale='Oryel', text_auto=True, aspect="auto")
+	corr_matrix.update_layout(height=400, width=950, title_text="Correlation Matrix")
+	corr1 = json.dumps(corr_matrix, cls=plotly.utils.PlotlyJSONEncoder)
+	corr_matrix.write_html("static/corr1.html")
 	merge=merge.tail(30)
 	fig = make_subplots(
 		rows=4, cols=1,start_cell="bottom-left",shared_xaxes=True, vertical_spacing=0.01, row_heights=[0.04, 0.04,0.04,0.04],
