@@ -47,8 +47,8 @@ def bar_with_plotly():
 	df['status'] = df['meanvalue'].apply(lambda x: '1' if x > 0 else '0')
 	df['status']=df['status'].astype("object")
 	df['price-meanavge']=df['price'] - df['meanavge']
-	df['move%'] = 100*(df['price-meanavge']/(df['price'] + df['meanavge']))
-	bins = [-43, -18, 0, 18, 43]
+	df['move%'] = (df['price-meanavge']/(df['price'] + df['meanavge']))
+	bins = [-.43, -.18, 0, .18, .43]
 	group_names = ["Severely Oversold","Neutral Oversold", "Neutral Overbought","Severely Overbought"]
 	df["Valuation"] = pd.cut(df["move%"], bins, labels=group_names)
 
@@ -130,7 +130,7 @@ def bar_with_plotly():
 	fig.add_vline(x='2016-07-09', line_width=3, line_dash="dash", line_color="green")	
 	fig.add_vline(x='2020-05-11', line_width=3, line_dash="dash", line_color="green")	
 	fig.add_vline(x='2024-04-02', line_width=3, line_dash="dash", line_color="green")
-	
+	fig.update_layout(template='plotly_dark')
 	Buyzones = json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
 
 	fig = px.scatter(df, x="date", y="price", color="Valuation", color_discrete_sequence=["red","green","blue","orange"],
@@ -138,7 +138,7 @@ def bar_with_plotly():
 	fig.add_trace(go.Scatter(name="200D", x=df['date'], y=df['200D'], marker = {'color' : 'red'}, legendrank=2))
 	fig.add_trace(go.Scatter(name="MeanAverage", x=df['date'], y=df['meanavge'], marker = {'color' : 'purple'}, legendrank=2))
 	fig.add_trace(go.Scatter(name="50D", x=df['date'], y=df['50D'], marker = {'color' : 'blue'}, legendrank=2))
-	fig.add_trace(go.Scatter(name="300D", x=df['date'], y=df['300D'], marker = {'color' : 'black'}, legendrank=2))
+	fig.add_trace(go.Scatter(name="300D", x=df['date'], y=df['300D'], marker = {'color' : 'white'}, legendrank=2))
 
 	# Moving Averages
 	fig.update_yaxes(fixedrange=False)
@@ -154,7 +154,7 @@ def bar_with_plotly():
 	fig.add_vline(x='2016-07-09', line_width=3, line_dash="dash", line_color="green")	
 	fig.add_vline(x='2020-05-11', line_width=3, line_dash="dash", line_color="green")	
 	fig.add_vline(x='2024-04-02', line_width=3, line_dash="dash", line_color="green")
-
+	fig.update_layout(template='plotly_dark')
 	Movingaverages = json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
 	
 	# MACD
@@ -165,7 +165,7 @@ def bar_with_plotly():
 
 	df_tail['RSI'] = pta.rsi(df_tail['price'], length = 14)
 
-	fig = make_subplots(rows=4, cols=1,shared_xaxes=True,vertical_spacing=0.01, row_heights=[0.2, 0.04,0.04,0.04])
+	fig = make_subplots(rows=3, cols=1,shared_xaxes=True,vertical_spacing=0.01, row_heights=[0.2, 0.09,0.09])
 
 	fig.add_trace(
 		go.Scatter(name="Price",x=df_tail['date'], y=df_tail['price'],
@@ -188,22 +188,17 @@ def bar_with_plotly():
 		marker=dict(color=df_tail['macd_h'], coloraxis="coloraxis1")),
 		row=2, col=1)
 
-	fig.add_trace(go.Bar(x=df_tail['date'], y=df_tail['move%'],
-						marker=dict(color=df_tail['move%'], coloraxis="coloraxis2")),
-				3, 1)
 
 	fig.add_trace(
 		go.Scatter(name="RSI",x=df_tail['date'], y=df_tail['RSI'],
 		marker=dict(color=df_tail['RSI'], coloraxis="coloraxis3")),
-		row=4, col=1)
+		row=3, col=1)
 
 	fig.update_yaxes(nticks=10)
 	fig.update_xaxes(nticks=50)
 	fig.update_layout(coloraxis1=dict(colorscale='Bluered_r'), showlegend=True)
-	fig.update_layout(coloraxis2=dict(colorscale='Bluered_r'), showlegend=True)
 	fig.update_layout(coloraxis3=dict(colorscale='Bluered_r'), showlegend=True)
 	fig.update_layout(coloraxis1_showscale=False)
-	fig.update_layout(coloraxis2_showscale=False)
 	fig.update_layout(height=700, width=1000, title_text="720 Day MACD, RSI, Price and Move%")
 	fig.update_layout(template='plotly_dark')
 
@@ -239,7 +234,7 @@ def bar_with_plotly():
 	fig.update_yaxes(title='', visible=True, showticklabels=False)
 	# Set the visibility OFF
 	fig.update_xaxes(title='x', visible=False, showticklabels=False)
-
+	fig.update_layout(height=500, width=1000, title_text="Current Valuation")
 	Indicators = json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
 
 	# YTD
@@ -263,7 +258,7 @@ def bar_with_plotly():
 	fig.update_layout(title_text='Year To Date Returns')
 	fig.update_layout(yaxis=dict(showticklabels=True))
 	fig.update_layout(height=500, width=1000, title_text="YTD Returns")
-
+	fig.update_layout(template='plotly_dark')
 	YTD = json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
 
 	# Corr
@@ -395,5 +390,5 @@ def bar_with_plotly():
 
 	
 if __name__ == '__main__':
-	app.run(debug=True)
+	app.run()
 
