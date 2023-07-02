@@ -320,7 +320,7 @@ def bar_with_plotly():
 	fig.update_yaxes(nticks=3)
 	fig.update_xaxes(nticks=25)
 	fig.update_layout(height=500, width=1000, title_text="30 Day Correlation")
-
+	fig.update_layout(template='plotly_dark')
 	corr2 = json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
 
 	# Moving Averages
@@ -384,6 +384,7 @@ def bar_with_plotly():
 		grid = {'rows': 2, 'columns': 3, 'pattern': "independent"},
 	)
 	fig.update_layout(height=500, width=1000, title_text="Moving Averages")
+	fig.update_layout(template='plotly_dark')
 	Movingaverages2 = json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
 
 	return render_template('bar.html',Movingaverages2=Movingaverages2,corr2=corr2,corr1=corr1,YTD=YTD, Buyzones=Buyzones, Movingaverages=Movingaverages, MACD=MACD,Indicators=Indicators)
