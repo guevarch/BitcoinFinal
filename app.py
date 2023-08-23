@@ -159,13 +159,13 @@ def bar_with_plotly():
 	
 	# MACD
 
-	df_tail=df.dropna()
-	df_tail = df_tail.tail(360)
+	df_tail = df.tail(360)
 	df_tail.head()
 
-	df_tail['RSI'] = pta.rsi(df_tail['price'], length = 14)
+	df_tail['RSI'] = pta.rsi(df['price'], length = 14)
 
-	fig = make_subplots(rows=3, cols=1,shared_xaxes=True,vertical_spacing=0.01, row_heights=[0.2, 0.09,0.09])
+	fig = make_subplots(rows=3, cols=1,shared_xaxes=True,vertical_spacing=0.001, row_heights=[0.2, 0.2,0.09])
+
 
 	fig.add_trace(
 		go.Scatter(name="Price",x=df_tail['date'], y=df_tail['price'],
@@ -199,7 +199,7 @@ def bar_with_plotly():
 	fig.update_layout(coloraxis1=dict(colorscale='Bluered_r'), showlegend=True)
 	fig.update_layout(coloraxis3=dict(colorscale='Bluered_r'), showlegend=True)
 	fig.update_layout(coloraxis1_showscale=False)
-	fig.update_layout(height=700, width=1000, title_text="720 Day MACD, RSI, Price and Move%")
+	fig.update_layout(height=700, width=1000, title_text="360 Day MACD, RSI, Price and Move%")
 	fig.update_layout(template='plotly_dark')
 
 	MACD = json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
