@@ -17,6 +17,9 @@ import seaborn as sns
 import mpld3
 import matplotlib.pyplot as plt
 
+import seaborn as sns
+from matplotlib.dates import MonthLocator, DateFormatter
+from matplotlib import colors
 
 
 # Create Home Page Route
@@ -130,7 +133,7 @@ def bar_with_plotly():
 	fig.add_vline(x='2016-07-09', line_width=3, line_dash="dash", line_color="green")	
 	fig.add_vline(x='2020-05-11', line_width=3, line_dash="dash", line_color="green")	
 	fig.add_vline(x='2024-04-02', line_width=3, line_dash="dash", line_color="green")
-	fig.update_layout(template='plotly_dark')
+	fig.update_layout(template='plotly_white')
 	Buyzones = json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
 
 	fig = px.scatter(df, x="date", y="price", color="Valuation", color_discrete_sequence=["red","green","blue","orange"],
@@ -154,7 +157,7 @@ def bar_with_plotly():
 	fig.add_vline(x='2016-07-09', line_width=3, line_dash="dash", line_color="green")	
 	fig.add_vline(x='2020-05-11', line_width=3, line_dash="dash", line_color="green")	
 	fig.add_vline(x='2024-04-02', line_width=3, line_dash="dash", line_color="green")
-	fig.update_layout(template='plotly_dark')
+	fig.update_layout(template='plotly_white')
 	Movingaverages = json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
 	
 	# MACD
@@ -387,6 +390,63 @@ def bar_with_plotly():
 	fig.update_layout(template='plotly_dark')
 	Movingaverages2 = json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
 
+	# Heatmap
+
+	df["month"] = df["date"].dt.strftime('%Y-%m')
+
+	# Compute the monthly returns
+	df_monthly = df.groupby("month")["price"].last().pct_change()
+
+	# Convert the resulting Series to a DataFrame
+	df_returns = df_monthly.to_frame(name="returns")
+
+	# Use pivot_table to reshape the data by year and month
+	df_pivot = df_returns.pivot_table(index=df_returns.index.str.slice(0,4),
+									columns=df_returns.index.str.slice(5,),
+									values="returns")
+
+	# import pandas as pd
+	df_pivot.rename(columns={'01': 'January', 
+							'02': 'February', 
+							'03': 'March', 
+							'04': 'April', 
+							'05': 'May', 
+							'06': 'June', 
+							'07': 'July', 
+							'08': 'August', 
+							'09': 'September', 
+							'10': 'October', 
+							'11': 'November', 
+							'12': 'December'}, inplace=True)
+	# Create a heatmap using Seaborn
+
+	lighter_red = '#FFA07A'
+	lighter_green = '#98FB98'
+
+	heatmap = sns.heatmap(df_pivot, cmap=[lighter_red, lighter_green], cbar=False, annot=True, fmt=".2%", center=0)
+	heatmap.tick_params(axis='x', rotation=0)
+
+	# Get the current tick locations and labels of the x-axis
+	x_ticks = heatmap.get_xticks()
+
+	# Create a list of all the unique x values in the pivot table
+	x_values = df_pivot.columns.get_level_values(0)
+
+	# Set the label for the x-axis of the heatmap
+	heatmap.set_xlabel('Month')
+	heatmap.set_ylabel('Years')
+
+	# change the figure size
+	fig = heatmap.get_figure()
+	fig.set_size_inches(17,8) # adjust the width and height as per your preference
+	# Set the tick labels for the x-axis
+	heatmap.set_xticklabels(x_values)
+
+	# Add a title to the heatmap
+	heatmap.set_title("Bitcoin Returns by Month")
+	# Show the plot
+	heatmap.figure.savefig("static/heatmap.png")
+	plt.show()
 	return render_template('bar.html',Movingaverages2=Movingaverages2,corr2=corr2,corr1=corr1,YTD=YTD, Buyzones=Buyzones, Movingaverages=Movingaverages, MACD=MACD,Indicators=Indicators)
 
 	
