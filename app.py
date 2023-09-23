@@ -438,7 +438,7 @@ def bar_with_plotly():
 
 	# change the figure size
 	fig = heatmap.get_figure()
-	fig.set_size_inches(17,8) # adjust the width and height as per your preference
+	fig.set_size_inches(14,10) # adjust the width and height as per your preference
 	# Set the tick labels for the x-axis
 	heatmap.set_xticklabels(x_values)
 
