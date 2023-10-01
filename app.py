@@ -16,10 +16,11 @@ import yfinance as yf
 import seaborn as sns
 import mpld3
 import matplotlib.pyplot as plt
-
+from scipy.optimize import curve_fit
 import seaborn as sns
 from matplotlib.dates import MonthLocator, DateFormatter
 from matplotlib import colors
+import plotly.io as pio
 
 
 # Create Home Page Route
@@ -447,7 +448,109 @@ def bar_with_plotly():
 	# Show the plot
 	heatmap.figure.savefig("static/heatmap.png")
 	plt.show()
-	return render_template('bar.html',Movingaverages2=Movingaverages2,corr2=corr2,corr1=corr1,YTD=YTD, Buyzones=Buyzones, Movingaverages=Movingaverages, MACD=MACD,Indicators=Indicators)
+
+
+	# Rainbow + Prophet
+
+	# Buy Zones
+
+	df =  pd.DataFrame(df).reset_index()
+
+	df['date'] = pd.to_datetime(df['date']) # Ensure that the date is in datetime or graphs might look funny
+	df = df[df["price"] > 0] # Drop all 0 values as they will fuck up the regression bands
+
+	# this is your log function
+	def logFunc(x,a,b,c):
+		return a*np.log(b+x) + c
+
+	# getting your x and y data from the dataframe
+	xdata = np.array([x+1 for x in range(len(df))])
+	ydata = np.log(df["price"])
+
+	# here we ar fitting the curve, you can use 2 data points however I wasn't able to get a graph that looked as good with just 2 points.
+	popt, pcov = curve_fit(logFunc, xdata, ydata, p0 = [10,100,90]) # p0 is justa guess, doesn't matter as far as I know
+
+	# This is our fitted data, remember we will need to get the ex of it to graph it
+	fittedYData = logFunc(xdata, popt[0], popt[1], popt[2])
+	fig = px.scatter(df, x="date", y="price", color="Valuation", color_discrete_sequence=["red","green","blue","orange"],
+					title="price")
+	fig.add_trace(go.Scatter(name="MeanAvg", x=df['date'], y=df['meanavge'], marker = {'color' : 'black'}, legendrank=2))
+	fig.add_trace(go.Scatter(x=prediction['ds'], y=np.exp(prediction['yhat']),
+		fill=None,
+		mode='lines',
+		line_color='lightblue',
+		))
+	fig.add_trace(go.Scatter(
+		x=prediction['ds'],
+		y=np.exp(prediction['yhat_lower']),
+		fill='tonexty', # fill area between trace0 and trace1
+		mode='lines', line_color='lightblue'))
+
+	fig.add_trace(go.Scatter(
+		x=prediction['ds'],
+		y=np.exp(prediction['yhat_upper']),
+		fill='tonexty', # fill area between trace0 and trace1
+		mode='lines', line_color='lightblue'))
+
+	fig.update_yaxes(fixedrange=False)
+	fig.update_layout(title_text='Bitcoin Prophet Model + Buy Zones')
+	fig.update_yaxes(type="log")
+	fig.update_xaxes(ticklabelposition="inside top", title="Date")
+	fig.update_yaxes(nticks=12)
+	fig.update_xaxes(nticks=50)
+	fig.update_layout(
+		margin=dict(l=20, r=100, t=70, b=20),
+	)
+	fig.update_layout(height=500, width=1000)
+	fig.update_layout(showlegend=False)
+	fig.add_vline(x='2012-11-28', line_width=3, line_dash="dash", line_color="green")
+	fig.add_vline(x='2016-07-09', line_width=3, line_dash="dash", line_color="green")	
+	fig.add_vline(x='2020-05-11', line_width=3, line_dash="dash", line_color="green")	
+	fig.add_vline(x='2024-04-02', line_width=3, line_dash="dash", line_color="green")
+
+	for i in range(0, 5):
+		fitted_data = np.exp(fittedYData + i * 0.455)
+		fig.add_trace(go.Scatter(x=df["date"], y=fitted_data, mode='lines', showlegend=False))
+
+		# You can use the below fill between trace rather than the above line trace, I prefer the line graph
+		fig.add_trace(go.Scatter(x=df["date"], y=np.exp(fittedYData + i * .45 - 1), fill=None, mode='lines',
+								line=dict(width=0), showlegend=False))
+		fig.add_trace(go.Scatter(x=df["date"], y=np.exp(fittedYData + i * .45), fill='tonexty', mode='lines',
+								name=f"Rainbow Band {i + 1}", line_color=f"hsl({i * 35},80%,50%)", showlegend=False))
+	fig.update_layout(template='plotly_white')
+	Rainbow = json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
+
+
+	# Black Rainbow
+
+	# Set dark background theme
+	pio.templates.default = "plotly_dark"
+
+	# Create plot with larger size
+	fig = go.Figure()
+	fig.update_layout(title='Bitcoin Rainbow Chart', xaxis_title='Time', yaxis_title='Bitcoin price in log scale')
+
+	fig.update_layout(
+		autosize=False,
+		width=1000,
+		height=600)
+
+	fig.update_yaxes(type="log")
+	fig.add_trace(
+		go.Scatter(x=list(df.date), y=list(df.price), showlegend=False, line_color='white'))
+	# Draw the rainbow bands
+	for i in range(0, 5):
+		fitted_data = np.exp(fittedYData + i * 0.455)
+		fig.add_trace(go.Scatter(x=df["date"], y=fitted_data, mode='lines', showlegend=False))
+
+		# You can use the below fill between trace rather than the above line trace, I prefer the line graph
+		fig.add_trace(go.Scatter(x=df["date"], y=np.exp(fittedYData + i * .45 - 1), fill=None, mode='lines',
+								line=dict(width=0), showlegend=False))
+		fig.add_trace(go.Scatter(x=df["date"], y=np.exp(fittedYData + i * .45), fill='tonexty', mode='lines',
+								name=f"Rainbow Band {i + 1}", line_color=f"hsl({i * 35},80%,50%)", showlegend=False))
+		BRainbow = json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
+
+	return render_template('bar.html',Rainbow=Rainbow,BRainbow=BRainbow,Movingaverages2=Movingaverages2,corr2=corr2,corr1=corr1,YTD=YTD, Buyzones=Buyzones, Movingaverages=Movingaverages, MACD=MACD,Indicators=Indicators)
 
 	
 if __name__ == '__main__':
