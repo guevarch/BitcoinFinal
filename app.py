@@ -22,7 +22,7 @@ from matplotlib.dates import MonthLocator, DateFormatter
 from matplotlib import colors
 import plotly.io as pio
 
-
+import warnings
 # Create Home Page Route
 app = Flask(__name__)
 
