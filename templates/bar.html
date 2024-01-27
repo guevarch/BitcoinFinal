@@ -55,7 +55,8 @@
     <div id='BRainbow' class='chart'></div>
     <div id='MACD' class='chart'></div>
     <div id='Movingaverages' class='chart'></div>
-
+    <div id='cloud' class='chart'></div>
+    <div id='Buyzonesbar' class='chart'></div>
     
     BRainbow
     <script type='text/javascript'>
@@ -79,6 +80,12 @@
 
         var graphs = {{YTD | safe}};
 		Plotly.plot('YTD',graphs,{});
+        
+        var graphs = {{cloud | safe}};
+		Plotly.plot('cloud',graphs,{});
+        
+        var graphs = {{Buyzonesbar | safe}};
+		Plotly.plot('Buyzonesbar',graphs,{});
         
 
     </script>

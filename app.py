@@ -553,8 +553,71 @@ def bar_with_plotly():
 		fig.add_trace(go.Scatter(x=df["date"], y=np.exp(fittedYData + i * .45), fill='tonexty', mode='lines',
 								name=f"Rainbow Band {i + 1}", line_color=f"hsl({i * 35},80%,50%)", showlegend=False))
 		BRainbow = json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
+  
+	fig = px.scatter(df, x="date", y="price", color="Valuation", color_discrete_sequence=["red","green","blue","orange"], 
+                 title="price")
 
-	return render_template('bar.html',Rainbow=Rainbow,BRainbow=BRainbow,Movingaverages2=Movingaverages2,corr2=corr2,corr1=corr1,YTD=YTD, Buyzones=Buyzones, Movingaverages=Movingaverages, MACD=MACD,Indicators=Indicators)
+	# Moving Average Cloud
+	fig.add_trace(go.Scatter(name="200D", x=df['date'], y=df['200D'], marker={'color': 'red'}, legendrank=2))
+	fig.add_trace(go.Scatter(name="MeanAverage", x=df['date'], y=df['meanavge'], marker={'color': 'purple'}, legendrank=2))
+	fig.add_trace(go.Scatter(name="50D", x=df['date'], y=df['50D'], marker={'color': 'blue'}, legendrank=2))
+	fig.add_trace(go.Scatter(name="300D", x=df['date'], y=df['300D'], marker={'color': 'white'}, legendrank=2))
+
+	# Adding the clouds
+	upper_bound = df['200D'] * 1.3  # 1% above the 200-day MA
+	lower_bound = df['50D'] * 0.7   # 1% below the 50-day MA
+
+	fig.add_trace(go.Scatter(x=df['date'], y=upper_bound, line=dict(width=0), showlegend=False))
+	fig.add_trace(go.Scatter(x=df['date'], y=lower_bound, line=dict(width=0), fill='tonexty', 
+							fillcolor='rgba(245, 166, 35, 0.3)', showlegend=False))  # Orange cloud
+
+	# Note: Adjust the upper_bound and lower_bound calculations according to your needs.
+	# The rgba color format includes an alpha value (transparency) where 1 is opaque and 0 is fully transparent.
+
+	# Further styling as per your current setup...
+	fig.update_yaxes(fixedrange=False)
+	fig.update_layout(title_text='Moving Averages Cloud')
+	fig.update_yaxes(type="log")
+	fig.update_xaxes(ticklabelposition="inside top", title="Date")
+	fig.update_yaxes(nticks=12)
+	fig.update_xaxes(nticks=50)
+	fig.update_layout(margin=dict(l=20, r=100, t=70, b=20))
+	fig.update_layout(height=500, width=1000)
+	fig.update_layout(showlegend=True)
+	# Vertical lines
+	fig.add_vline(x='2012-11-28', line_width=3, line_dash="dash", line_color="green")
+	fig.add_vline(x='2016-07-09', line_width=3, line_dash="dash", line_color="green")    
+	fig.add_vline(x='2020-05-11', line_width=3, line_dash="dash", line_color="green")    
+	fig.add_vline(x='2024-04-02', line_width=3, line_dash="dash", line_color="green")
+	fig.update_layout(template='plotly_white')
+
+	cloud = json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
+ 
+ 
+	## Buyzonesbar
+	fig = px.bar(df, x="date", y="price", color="Valuation", color_discrete_sequence=["red","green","blue","orange"],
+					title="price")
+	fig.add_trace(go.Scatter(name="MeanAvg", x=df['date'], y=df['meanavge'], marker = {'color' : 'black'}, legendrank=2))
+
+	fig.update_yaxes(fixedrange=False)
+	fig.update_layout(title_text='Bitcoin Buy Zones 2.0')
+	fig.update_yaxes(type="log")
+	fig.update_xaxes(ticklabelposition="inside top", title="Date")
+	fig.update_yaxes(nticks=12)
+	fig.update_xaxes(nticks=50)
+	fig.update_layout(
+		margin=dict(l=20, r=100, t=70, b=20),
+	)
+	fig.update_layout(showlegend=True)
+	fig.update_traces(dict(marker_line_width=.01))
+	fig.add_vline(x='2012-11-28', line_width=3, line_dash="dash", line_color="green")
+	fig.add_vline(x='2016-07-09', line_width=3, line_dash="dash", line_color="green")	
+	fig.add_vline(x='2020-05-11', line_width=3, line_dash="dash", line_color="green")	
+	fig.add_vline(x='2024-04-02', line_width=3, line_dash="dash", line_color="green")	
+	fig.layout.template = 'seaborn'
+	Buyzonesbar = json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
+
+	return render_template('bar.html',Buyzonesbar=Buyzonesbar,cloud=cloud,Rainbow=Rainbow,BRainbow=BRainbow,Movingaverages2=Movingaverages2,corr2=corr2,corr1=corr1,YTD=YTD, Buyzones=Buyzones, Movingaverages=Movingaverages, MACD=MACD,Indicators=Indicators)
 
 	
 if __name__ == '__main__':
