@@ -559,10 +559,8 @@ def bar_with_plotly():
 
 	# Moving Average Cloud
 	fig.add_trace(go.Scatter(name="200D", x=df['date'], y=df['200D'], marker={'color': 'red'}, legendrank=2))
-	fig.add_trace(go.Scatter(name="MeanAverage", x=df['date'], y=df['meanavge'], marker={'color': 'purple'}, legendrank=2))
 	fig.add_trace(go.Scatter(name="50D", x=df['date'], y=df['50D'], marker={'color': 'blue'}, legendrank=2))
-	fig.add_trace(go.Scatter(name="300D", x=df['date'], y=df['300D'], marker={'color': 'white'}, legendrank=2))
-
+	
 	# Adding the clouds
 	upper_bound = df['200D'] * 1.3  # 1% above the 200-day MA
 	lower_bound = df['50D'] * 0.7   # 1% below the 50-day MA
