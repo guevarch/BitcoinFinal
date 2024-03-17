@@ -137,7 +137,7 @@ def bar_with_plotly():
 	fig.add_vline(x='2012-11-28', line_width=3, line_dash="dash", line_color="green")
 	fig.add_vline(x='2016-07-09', line_width=3, line_dash="dash", line_color="green")	
 	fig.add_vline(x='2020-05-11', line_width=3, line_dash="dash", line_color="green")	
-	fig.add_vline(x='2024-04-02', line_width=3, line_dash="dash", line_color="green")
+	fig.add_vline(x='2024-04-20', line_width=3, line_dash="dash", line_color="green")
 	fig.update_layout(template='plotly_white')
 	Buyzones = json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
 
@@ -161,7 +161,7 @@ def bar_with_plotly():
 	fig.add_vline(x='2012-11-28', line_width=3, line_dash="dash", line_color="green")
 	fig.add_vline(x='2016-07-09', line_width=3, line_dash="dash", line_color="green")	
 	fig.add_vline(x='2020-05-11', line_width=3, line_dash="dash", line_color="green")	
-	fig.add_vline(x='2024-04-02', line_width=3, line_dash="dash", line_color="green")
+	fig.add_vline(x='2024-04-20', line_width=3, line_dash="dash", line_color="green")
 	fig.update_layout(template='plotly_white')
 	Movingaverages = json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
 	
@@ -510,7 +510,7 @@ def bar_with_plotly():
 	fig.add_vline(x='2012-11-28', line_width=3, line_dash="dash", line_color="green")
 	fig.add_vline(x='2016-07-09', line_width=3, line_dash="dash", line_color="green")	
 	fig.add_vline(x='2020-05-11', line_width=3, line_dash="dash", line_color="green")	
-	fig.add_vline(x='2024-04-02', line_width=3, line_dash="dash", line_color="green")
+	fig.add_vline(x='2024-04-20', line_width=3, line_dash="dash", line_color="green")
 
 	for i in range(0, 5):
 		fitted_data = np.exp(fittedYData + i * 0.455)
@@ -586,7 +586,7 @@ def bar_with_plotly():
 	fig.add_vline(x='2012-11-28', line_width=3, line_dash="dash", line_color="green")
 	fig.add_vline(x='2016-07-09', line_width=3, line_dash="dash", line_color="green")    
 	fig.add_vline(x='2020-05-11', line_width=3, line_dash="dash", line_color="green")    
-	fig.add_vline(x='2024-04-02', line_width=3, line_dash="dash", line_color="green")
+	fig.add_vline(x='2024-04-20', line_width=3, line_dash="dash", line_color="green")
 	fig.update_layout(template='plotly_white')
 
 	cloud = json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
@@ -611,7 +611,7 @@ def bar_with_plotly():
 	fig.add_vline(x='2012-11-28', line_width=3, line_dash="dash", line_color="green")
 	fig.add_vline(x='2016-07-09', line_width=3, line_dash="dash", line_color="green")	
 	fig.add_vline(x='2020-05-11', line_width=3, line_dash="dash", line_color="green")	
-	fig.add_vline(x='2024-04-02', line_width=3, line_dash="dash", line_color="green")	
+	fig.add_vline(x='2024-04-20', line_width=3, line_dash="dash", line_color="green")	
 	fig.layout.template = 'seaborn'
 	Buyzonesbar = json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
 
