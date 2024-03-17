@@ -57,7 +57,7 @@ def bar_with_plotly():
 	df['price-meanavge']=df['price'] - df['meanavge']
 	df['move%'] = (df['price-meanavge']/(df['price'] + df['meanavge']))
 	bins = [-.43, -.18, 0, .18, .43]
-	group_names = ["Severely Oversold","Neutral Oversold", "Neutral Overbought","Severely Overbought"]
+	group_names = ["2 STDV Under","1 STDV Under", "1 STDV Over","2 STDV Over "]
 	df["Valuation"] = pd.cut(df["move%"], bins, labels=group_names)
 
 	k = df['price'].ewm(span=12, adjust=False, min_periods=12).mean()
