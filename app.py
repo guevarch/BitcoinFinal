@@ -395,6 +395,7 @@ def bar_with_plotly():
 	fig.update_layout(template='plotly_dark')
 	Movingaverages2 = json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
 
+ 
 	# Heatmap
 
 	df["month"] = df["date"].dt.strftime('%Y-%m')
