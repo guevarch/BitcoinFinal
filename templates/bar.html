@@ -57,8 +57,9 @@
     <div id='Movingaverages' class='chart'></div>
     <div id='cloud' class='chart'></div>
     <div id='Buyzonesbar' class='chart'></div>
-    
-    BRainbow
+    <div id='cycle_comp' class='chart'></div>
+    <div id='cycle_comp2' class='chart'></div>
+
     <script type='text/javascript'>
 		var graphs = {{Buyzones | safe}};
 		Plotly.plot('Buyzones',graphs,{});
@@ -87,6 +88,12 @@
         var graphs = {{Buyzonesbar | safe}};
 		Plotly.plot('Buyzonesbar',graphs,{});
         
+        var graphs = {{cycle_comp | safe}};
+		Plotly.plot('cycle_comp',graphs,{});
+
+        var graphs = {{cycle_comp2 | safe}};
+		Plotly.plot('cycle_comp2',graphs,{});
+
 
     </script>
 

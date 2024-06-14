@@ -21,7 +21,7 @@ import seaborn as sns
 from matplotlib.dates import MonthLocator, DateFormatter
 from matplotlib import colors
 import plotly.io as pio
-
+import plotly.subplots as sp
 import warnings
 # Create Home Page Route
 app = Flask(__name__)
@@ -207,7 +207,7 @@ def bar_with_plotly():
 	fig.update_layout(coloraxis1=dict(colorscale='Bluered_r'), showlegend=True)
 	fig.update_layout(coloraxis3=dict(colorscale='Bluered_r'), showlegend=True)
 	fig.update_layout(coloraxis1_showscale=False)
-	fig.update_layout(height=700, width=1000, title_text="360 Day MACD, RSI, Price and Move%")
+	fig.update_layout(height=500, width=1000, title_text="360 Day MACD, RSI, Price and Move%")
 	fig.update_layout(template='plotly_dark')
 
 	MACD = json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
@@ -604,9 +604,9 @@ def bar_with_plotly():
 	fig.update_xaxes(ticklabelposition="inside top", title="Date")
 	fig.update_yaxes(nticks=12)
 	fig.update_xaxes(nticks=50)
-	fig.update_layout(
-		margin=dict(l=20, r=100, t=70, b=20),
-	)
+	# fig.update_layout(
+	# 	margin=dict(l=20, r=100, t=70, b=20),
+	# )
 	fig.update_layout(showlegend=True)
 	fig.update_traces(dict(marker_line_width=.01))
 	fig.add_vline(x='2012-11-28', line_width=3, line_dash="dash", line_color="green")
@@ -616,7 +616,156 @@ def bar_with_plotly():
 	fig.layout.template = 'seaborn'
 	Buyzonesbar = json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
 
-	return render_template('bar.html',Buyzonesbar=Buyzonesbar,cloud=cloud,Rainbow=Rainbow,BRainbow=BRainbow,Movingaverages2=Movingaverages2,corr2=corr2,corr1=corr1,YTD=YTD, Buyzones=Buyzones, Movingaverages=Movingaverages, MACD=MACD,Indicators=Indicators)
+	# Halving Tracker
+ 
+	df['daily_pct_change'] = df['price'].pct_change() * 100
+	df = df[['date', 'price', 'daily_pct_change']]
+	# Convert the dates to datetime objects
+	date1 = pd.to_datetime('2012-11-28')
+	date2 = pd.to_datetime('2016-07-9')
+	date3 = pd.to_datetime('2020-05-11')
+	date4 = pd.to_datetime('2024-04-20')
+
+	# Create the cycle DataFrames
+	cycle1 = df[df['date'] <= date1]
+	cycle2 = df[(df['date'] > date1) & (df['date'] <= date2)]
+	cycle3 = df[(df['date'] > date2) & (df['date'] <= date3)]
+	cycle4 = df[(df['date'] > date3) & (df['date'] <= date4)]
+	cycle5 = df[df['date'] > date4]
+
+	cycle1 = cycle1.reset_index(drop=True)
+	cycle2 = cycle2.reset_index(drop=True)
+	cycle3 = cycle3.reset_index(drop=True)
+	cycle4 = cycle4.reset_index(drop=True)
+	cycle5 = cycle5.reset_index(drop=True)
+
+
+	cycle1['cumulative_pct_change'] = cycle1['daily_pct_change'].cumsum()
+	cycle2['cumulative_pct_change'] = cycle2['daily_pct_change'].cumsum()
+	cycle3['cumulative_pct_change'] = cycle3['daily_pct_change'].cumsum()
+	cycle4['cumulative_pct_change'] = cycle4['daily_pct_change'].cumsum()
+	cycle5['cumulative_pct_change'] = cycle5['daily_pct_change'].cumsum()
+
+	cycle1 = cycle1.reset_index()
+	cycle2 = cycle2.reset_index()
+	cycle3 = cycle3.reset_index()
+	cycle4 = cycle4.reset_index()
+	cycle5 = cycle5.reset_index()
+
+	cycle1 = cycle1.rename(columns={'index': 'days from halving'})
+
+	cycle2 = cycle2.rename(columns={'index': 'days from halving'})
+	cycle3 = cycle3.rename(columns={'index': 'days from halving'})
+	cycle4 = cycle4.rename(columns={'index': 'days from halving'})
+	cycle5 = cycle5.rename(columns={'index': 'days from halving'})
+ 
+		# Get the first price value from cycle 5
+	first_price_cycle5 = cycle5['price'].iloc[0]
+
+	# cycle1['new_price'] = cycle1['price'].pct_change().add(1).fillna(1).cumprod().mul(first_price_cycle5)
+	cycles = [cycle1, cycle2, cycle3, cycle4]
+
+	for cycle in cycles:
+		cycle['new_price'] = cycle['price'].pct_change().add(1).fillna(1).cumprod().mul(first_price_cycle5)
+	# Add new_date column to cycle3 DataFrame
+	cycle3['new_date'] = pd.to_datetime('2024-04-20') + pd.to_timedelta(cycle3['days from halving'], unit='D')
+	# cycle1['new_date'] = pd.to_datetime('2024-04-20') + pd.to_timedelta(cycle1['days from halving'], unit='D')
+	cycle2['new_date'] = pd.to_datetime('2024-04-20') + pd.to_timedelta(cycle2['days from halving'], unit='D')
+	# Add new_date column to cycle4 DataFrame
+	cycle4['new_date'] = pd.to_datetime('2024-04-20') + pd.to_timedelta(cycle4['days from halving'], unit='D')
+	
+	# Create a new figure
+	fig = go.Figure()
+
+	# Calculate the average of new_price for cycle3 and cycle4
+	average_price = pd.concat([cycle3['new_price'], cycle2['new_price'], cycle4['new_price']], axis=1).mean(axis=1)
+
+	# Convert the average_price Series into a DataFrame
+	average_price = average_price.to_frame()
+
+	# Rename the 0 column to 'new_price'
+	average_price.columns = ['new_price']
+
+	# Add a new column called 'new_date' and use the 'new_date' column from cycle4
+	average_price['new_date'] = cycle4['new_date']
+
+	# Add traces for new_price for cycle3 and cycle4
+	fig.add_trace(go.Scatter(x=cycle2.new_date, y=cycle2['new_price'], mode='lines', name='2012-2016 Cycle'))
+	fig.add_trace(go.Scatter(x=cycle3.new_date, y=cycle3['new_price'], mode='lines', name='2016-2020 Cycle'))
+	fig.add_trace(go.Scatter(x=cycle4.new_date, y=cycle4['new_price'], mode='lines', name='2020-2024 Cycle'))
+	fig.add_trace(go.Scatter(x=cycle5.date, y=cycle5['price'], mode='lines', name='2024-2028 Cycle', line=dict(color='black')))
+
+	# Set labels and title
+	fig.update_layout(
+		title='Cycle Comparison Tracker',
+		xaxis_title='Index',
+		yaxis_title='New Price',
+		width=1200,  # Set the width of the plot
+		height=700  # Set the height of the plot
+	)
+	fig.update_layout(template='plotly_white')
+	# Set y-axis to logarithmic scale and format ticks
+	fig.update_yaxes(type='log', tickformat='.0f')
+	cycle_comp = json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
+	
+	# Cycle Comparison 2
+	# Get the most recent 'date' from cycle5
+	cycle5['date'] = pd.to_datetime(cycle5['date'])
+	recent_date = cycle5.iloc[-1]['date']
+
+	# Filter 'new_date' and 'new_price' for the most recent date
+	cycle2_today = cycle2[cycle2['new_date'] == pd.Timestamp(recent_date)][['new_date', 'new_price']]
+	cycle3_today = cycle3[cycle3['new_date'] == pd.Timestamp(recent_date)][['new_date', 'new_price']]
+	cycle4_today = cycle4[cycle4['new_date'] == pd.Timestamp(recent_date)][['new_date', 'new_price']]
+	cycle5_today = cycle5[cycle5['date'] == pd.Timestamp(recent_date)][['date', 'price']]
+
+	# Concatenate the dataframes and rename the 'new_price' or 'price' column
+	cycle2_today.rename(columns={'new_date': 'date', 'new_price': 'cycle2_price'}, inplace=True)
+	cycle3_today.rename(columns={'new_date': 'date', 'new_price': 'cycle3_price'}, inplace=True)
+	cycle4_today.rename(columns={'new_date': 'date', 'new_price': 'cycle4_price'}, inplace=True)
+	cycle5_today.rename(columns={'price': 'cycle5_price'}, inplace=True)
+
+	# Merge the dataframes on 'date'
+	compare_df = pd.merge(cycle2_today, cycle3_today, on='date', how='outer')
+	compare_df = pd.merge(compare_df, cycle4_today, on='date', how='outer')
+	compare_df = pd.merge(compare_df, cycle5_today, on='date', how='outer')
+ 
+
+
+	# Create a 2x2 grid of subplots of type 'indicator'
+	fig = sp.make_subplots(rows=2, cols=2, subplot_titles=("2012 Scaled", "2016 Scaled", "2020 Scaled", "Current"), specs=[[{'type': 'indicator'}, {'type': 'indicator'}], [{'type': 'indicator'}, {'type': 'indicator'}]])
+
+	# Calculate the delta
+	delta = compare_df['cycle5_price'].iloc[-1]
+
+	fig.add_trace(go.Indicator(
+		mode = "number+delta",
+		value = compare_df['cycle2_price'].iloc[-1],
+		delta = {'reference': delta}),
+		row=1, col=1)
+
+	fig.add_trace(go.Indicator(
+		mode = "number+delta",
+		value = compare_df['cycle3_price'].iloc[-1],
+		delta = {'reference': delta}),
+		row=1, col=2)
+
+	fig.add_trace(go.Indicator(
+		mode = "number+delta",
+		value = compare_df['cycle4_price'].iloc[-1],
+		delta = {'reference': delta}),
+		row=2, col=1)
+
+	fig.add_trace(go.Indicator(
+		mode = "number+delta",
+		value = compare_df['cycle5_price'].iloc[-1],
+		delta = {'reference': delta}),
+		row=2, col=2)
+	fig.update_layout(template='plotly_white')
+	fig.update_layout(height=500, width=1000, title_text="Halving Comparison 2")
+	cycle_comp2 = json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
+	
+	return render_template('bar.html',cycle_comp2=cycle_comp2,cycle_comp=cycle_comp,Buyzonesbar=Buyzonesbar,cloud=cloud,Rainbow=Rainbow,BRainbow=BRainbow,Movingaverages2=Movingaverages2,corr2=corr2,corr1=corr1,YTD=YTD, Buyzones=Buyzones, Movingaverages=Movingaverages, MACD=MACD,Indicators=Indicators)
 
 	
 if __name__ == '__main__':
