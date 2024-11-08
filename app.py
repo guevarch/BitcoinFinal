@@ -252,8 +252,8 @@ def bar_with_plotly():
 		ytd_return = ((df.Close.iloc[-1]/df.Close.iloc[0])-1)
 		return ytd_return
 
-	tickers = ['BTC-USD', 'GC=F', 'Cl=F', 'TLT', 'DX=F', '^RUT', '^GSPC', '^IXIC', '^DJI', 'BIGPX']
-	asset_names = ['Bitcoin', 'Gold', 'Oil', '20yr Treasury', 'DXY', 'Russell 2000 Index', 'S&P 500', 'NASDAQ', 'Dow Jones', '60/40']
+	tickers = ['BTC-USD','MSTR', 'GC=F', 'Cl=F', 'TLT', 'DX=F', '^RUT', '^GSPC', '^IXIC', '^DJI', 'BIGPX']
+	asset_names = ['Bitcoin','MSTR', 'Gold', 'Oil', '20yr Treasury', 'DXY', 'Russell 2000 Index', 'S&P 500', 'NASDAQ', 'Dow Jones', '60/40']
 
 	data = [[asset_name, get_ytd_returns(ticker)*100] for asset_name, ticker in zip(asset_names, tickers)]
 
