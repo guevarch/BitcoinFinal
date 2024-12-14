@@ -165,52 +165,7 @@ def bar_with_plotly():
 	fig.update_layout(template='plotly_white')
 	Movingaverages = json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
 	
-	# MACD
 
-	df_tail = df.tail(360)
-	df_tail.head()
-
-	df_tail['RSI'] = pta.rsi(df['price'], length = 14)
-
-	fig = make_subplots(rows=3, cols=1,shared_xaxes=True,vertical_spacing=0.001, row_heights=[0.2, 0.2,0.09])
-
-
-	fig.add_trace(
-		go.Scatter(name="Price",x=df_tail['date'], y=df_tail['price'],
-			marker=dict(color=df_tail['macd'], coloraxis="coloraxis1")),
-		row=1, col=1)
-
-
-	fig.add_trace(
-		go.Bar(name="macd",x=df_tail['date'], y=df_tail['macd'],
-		marker=dict(color=df_tail['macd'], coloraxis="coloraxis1")),
-		row=2, col=1)
-
-	fig.add_trace(
-		go.Scatter(name="macd_s",x=df_tail['date'], y=df_tail['macd_s'],
-		marker=dict(color=df_tail['macd_s'], coloraxis="coloraxis1")),
-		row=2, col=1)
-
-	fig.add_trace(
-		go.Scatter(name="macd_h",x=df_tail['date'], y=df_tail['macd_h'],
-		marker=dict(color=df_tail['macd_h'], coloraxis="coloraxis1")),
-		row=2, col=1)
-
-
-	fig.add_trace(
-		go.Scatter(name="RSI",x=df_tail['date'], y=df_tail['RSI'],
-		marker=dict(color=df_tail['RSI'], coloraxis="coloraxis3")),
-		row=3, col=1)
-
-	fig.update_yaxes(nticks=10)
-	fig.update_xaxes(nticks=50)
-	fig.update_layout(coloraxis1=dict(colorscale='Bluered_r'), showlegend=True)
-	fig.update_layout(coloraxis3=dict(colorscale='Bluered_r'), showlegend=True)
-	fig.update_layout(coloraxis1_showscale=False)
-	fig.update_layout(height=500, width=1000, title_text="360 Day MACD, RSI, Price and Move%")
-	fig.update_layout(template='plotly_dark')
-
-	MACD = json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
 
 
 	#Indicators
@@ -764,8 +719,88 @@ def bar_with_plotly():
 	fig.update_layout(template='plotly_white')
 	fig.update_layout(height=500, width=1000, title_text="Halving Comparison 2")
 	cycle_comp2 = json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
-	
-	return render_template('bar.html',cycle_comp2=cycle_comp2,cycle_comp=cycle_comp,Buyzonesbar=Buyzonesbar,cloud=cloud,Rainbow=Rainbow,BRainbow=BRainbow,Movingaverages2=Movingaverages2,corr2=corr2,corr1=corr1,YTD=YTD, Buyzones=Buyzones, Movingaverages=Movingaverages, MACD=MACD,Indicators=Indicators)
+ 
+ 
+    # MSTR
+    
+	mstr_df = yf.Ticker('MSTR').history(period='7y',interval='1d',actions=False).reset_index()
+	mstr_df = mstr_df.rename(columns={"Date": "date"})
+	mstr_df['date'] = mstr_df['date'].apply(lambda x: x.strftime('%Y-%m-%d'))
+	mstr_df['price'] = mstr_df[['Open', 'High', 'Low', 'Close']].mean(axis=1)
+	mstr_df = mstr_df.drop(columns=['Volume', 'Open', 'High', 'Low', 'Close'])
+	# Convert 'date' columns to datetime
+	df['date'] = pd.to_datetime(df['date'])
+	mstr_df['date'] = pd.to_datetime(mstr_df['date'])
+
+
+	# Merge the dataframes on the 'date' column
+	combined_df = pd.merge(df, mstr_df, on='date', how='outer')
+	combined_df = combined_df.rename(columns={"price_x": "bitcoin", "price_y": "mstr"})
+	# Drop rows with any NaN values
+	combined_df = combined_df.dropna()
+	# Filter the combined dataframe to only include data after August 2020
+	combined_df = combined_df[combined_df['date'] > '2020-08-01']
+	# Create a new column 'mstr_to_bitcoin' by dividing 'mstr' by 'bitcoin'
+	combined_df['mstr_to_bitcoin'] = combined_df['mstr']*1000 / combined_df['bitcoin']
+	# Display the combined dataframe
+	# Calculate moving averages
+	combined_df['mstr_to_bitcoin_7d'] = combined_df['mstr_to_bitcoin'].rolling(window=7).mean()
+	combined_df['mstr_to_bitcoin_20d'] = combined_df['mstr_to_bitcoin'].rolling(window=20).mean()
+	combined_df['mstr_to_bitcoin_50d'] = combined_df['mstr_to_bitcoin'].rolling(window=50).mean()
+	combined_df['mstr_to_bitcoin_100d'] = combined_df['mstr_to_bitcoin'].rolling(window=100).mean()
+	# Keep only the specified columns
+	combined_df = combined_df[['date', 'bitcoin', 'mstr','mstr_to_bitcoin', 'mstr_to_bitcoin_20d']]
+	combined_df['mstr_to_bitcoin_diff'] = combined_df['mstr_to_bitcoin'] - combined_df['mstr_to_bitcoin_20d']
+	# Calculate the standard deviation of 'mstr_to_bitcoin_diff'
+	std_dev = combined_df['mstr_to_bitcoin_diff'].std()
+
+	# Define the bins based on standard deviation
+	bins = [-2*std_dev, -std_dev, 0, std_dev, 2*std_dev]
+
+	# Create labels for the bins
+	group_names = ['-2 STD', '-1 STD', '+1 STD', '+2 STD']
+	combined_df = combined_df.dropna()
+	# Create a new column 'std_dev_bucket' with the bin labels
+	combined_df['std_dev_bucket'] = pd.cut(combined_df['mstr_to_bitcoin_diff'], bins=bins, labels=group_names)
+	fig = px.scatter(combined_df, x="date", y="mstr_to_bitcoin", color="std_dev_bucket", 
+					color_discrete_sequence=["blue", "green", "orange", "red"],
+					title="MSTR to Bitcoin Ratio with Standard Deviation Buckets")
+	fig.add_scatter(x=combined_df['date'], y=combined_df['mstr_to_bitcoin_20d'], mode='lines', name='20 Day MA')
+	fig.update_traces(marker=dict(color='black'), selector=dict(name='20 Day MA'))
+	fig.update_layout(width=1000, height=700)
+	fig.update_layout(template='plotly_white')
+
+	# Add a horizontal gauge bar
+	fig.add_trace(go.Indicator(
+		mode="gauge+number",
+		value=combined_df['mstr_to_bitcoin_diff'].iloc[-1],
+		domain={'x': [0.1, 0.9], 'y': [0.85, 1]},
+		title={'text': "MSTR to Bitcoin Diff"},
+		gauge={
+			'shape': "bullet",
+			'axis': {'range': [-2*std_dev, 2*std_dev]},
+			'bar': {'color': "black"},
+			'steps': [
+				{'range': [-2*std_dev, -std_dev], 'color': "red"},
+				{'range': [-std_dev, 0], 'color': "orange"},
+				{'range': [0, std_dev], 'color': "blue"},
+				{'range': [std_dev, 2*std_dev], 'color': "green"}
+			],
+			'threshold': {
+				'line': {'color': "black", 'width': 4},
+				'thickness': 0.3,
+				'value': combined_df['mstr_to_bitcoin_diff'].iloc[-1]
+			}
+		}
+	))
+
+	fig.update_traces(
+		domain={'x': [0.4, 0.9], 'y': [0.85, 0.95]},
+		selector=dict(type='indicator')
+	)
+	fig.show()
+	MSTR = json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
+	return render_template('bar.html',MSTR=MSTR,cycle_comp2=cycle_comp2,cycle_comp=cycle_comp,Buyzonesbar=Buyzonesbar,cloud=cloud,Rainbow=Rainbow,BRainbow=BRainbow,Movingaverages2=Movingaverages2,corr2=corr2,corr1=corr1,YTD=YTD, Buyzones=Buyzones, Movingaverages=Movingaverages,Indicators=Indicators)
 
 	
 if __name__ == '__main__':
