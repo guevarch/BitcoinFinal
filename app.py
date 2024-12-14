@@ -139,6 +139,25 @@ def bar_with_plotly():
 	fig.add_vline(x='2020-05-11', line_width=3, line_dash="dash", line_color="green")	
 	fig.add_vline(x='2024-04-20', line_width=3, line_dash="dash", line_color="green")
 	fig.update_layout(template='plotly_white')
+ 
+	# Create figure
+	# Define colors
+	colors = ["red", "orange", "blue", "green"]
+
+	# Create figure
+	fig.add_trace(go.Indicator(
+		mode="number+gauge+delta",
+		value=df['move%'].iloc[-1],
+		delta={'reference': 0},
+		title={'text': df['Valuation'].iloc[-1]},
+		domain={'x': [0.5, .9], 'y': [0.1, 0.18]},
+		gauge={
+			'shape': "bullet",
+			'axis': {'range': [min(bins), max(bins)]},
+			'bar': {'color': 'black'},
+			'steps': [{'range': [bins[i], bins[i + 1]], 'color': colors[i]} for i in range(len(bins) - 1)]
+		}
+	))
 	Buyzones = json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
 
 	fig = px.scatter(df, x="date", y="price", color="Valuation", color_discrete_sequence=["red","green","blue","orange"],
@@ -660,7 +679,7 @@ def bar_with_plotly():
 	)
 	fig.update_layout(template='plotly_white')
 	# Set y-axis to logarithmic scale and format ticks
-	fig.update_yaxes(type='log', tickformat='.0f')
+	fig.update_yaxes(type='log', tickformat='s', tickformatstops=[dict(dtickrange=[None, None], value=",.2s")])
 	cycle_comp = json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
 	
 	# Cycle Comparison 2
