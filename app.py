@@ -668,7 +668,7 @@ def bar_with_plotly():
 	fig.add_trace(go.Scatter(x=cycle3.new_date, y=cycle3['new_price'], mode='lines', name='2016-2020 Cycle'))
 	fig.add_trace(go.Scatter(x=cycle4.new_date, y=cycle4['new_price'], mode='lines', name='2020-2024 Cycle'))
 	fig.add_trace(go.Scatter(x=cycle5.date, y=cycle5['price'], mode='lines', name='2024-2028 Cycle', line=dict(color='black')))
-
+	fig.add_vline(x=cycle5['date'].iloc[-1], line=dict(color='orange', dash='dash'), name='Current Date')
 	# Set labels and title
 	fig.update_layout(
 		title='Cycle Comparison Tracker',
@@ -774,10 +774,10 @@ def bar_with_plotly():
 	std_dev = combined_df['mstr_to_bitcoin_diff'].std()
 
 	# Define the bins based on standard deviation
-	bins = [-2*std_dev, -std_dev, 0, std_dev, 2*std_dev]
+	bins = [-3*std_dev, -std_dev, 0, std_dev, 3*std_dev]
 
 	# Create labels for the bins
-	group_names = ['-2 STD', '-1 STD', '+1 STD', '+2 STD']
+	group_names = ['-3 STD', '-1 STD', '+1 STD', '+3 STD']
 	combined_df = combined_df.dropna()
 	# Create a new column 'std_dev_bucket' with the bin labels
 	combined_df['std_dev_bucket'] = pd.cut(combined_df['mstr_to_bitcoin_diff'], bins=bins, labels=group_names)
@@ -787,7 +787,7 @@ def bar_with_plotly():
 	fig.add_scatter(x=combined_df['date'], y=combined_df['mstr_to_bitcoin_20d'], mode='lines', name='20 Day MA')
 	fig.update_traces(marker=dict(color='black'), selector=dict(name='20 Day MA'))
 	fig.update_layout(width=1000, height=700)
-	fig.update_layout(template='plotly_white')
+
 
 	# Add a horizontal gauge bar
 	fig.add_trace(go.Indicator(
@@ -797,13 +797,13 @@ def bar_with_plotly():
 		title={'text': "MSTR to Bitcoin Diff"},
 		gauge={
 			'shape': "bullet",
-			'axis': {'range': [-2*std_dev, 2*std_dev]},
+			'axis': {'range': [-3*std_dev, 3*std_dev]},
 			'bar': {'color': "black"},
 			'steps': [
-				{'range': [-2*std_dev, -std_dev], 'color': "red"},
-				{'range': [-std_dev, 0], 'color': "orange"},
-				{'range': [0, std_dev], 'color': "blue"},
-				{'range': [std_dev, 2*std_dev], 'color': "green"}
+				{'range': [-3*std_dev, -1.5*std_dev], 'color': "red"},
+				{'range': [-1.5*std_dev, 0], 'color': "orange"},
+				{'range': [0, 1.5*std_dev], 'color': "blue"},
+				{'range': [1.5*std_dev, 3*std_dev], 'color': "green"}
 			],
 			'threshold': {
 				'line': {'color': "black", 'width': 4},
@@ -817,7 +817,7 @@ def bar_with_plotly():
 		domain={'x': [0.4, 0.9], 'y': [0.85, 0.95]},
 		selector=dict(type='indicator')
 	)
-	fig.show()
+	fig.update_layout(template='plotly_white')
 	MSTR = json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
 	return render_template('bar.html',MSTR=MSTR,cycle_comp2=cycle_comp2,cycle_comp=cycle_comp,Buyzonesbar=Buyzonesbar,cloud=cloud,Rainbow=Rainbow,BRainbow=BRainbow,Movingaverages2=Movingaverages2,corr2=corr2,corr1=corr1,YTD=YTD, Buyzones=Buyzones, Movingaverages=Movingaverages,Indicators=Indicators)
 
