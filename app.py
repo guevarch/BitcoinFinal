@@ -786,7 +786,7 @@ def bar_with_plotly():
 					title="MSTR to Bitcoin Ratio with Standard Deviation Buckets")
 	fig.add_scatter(x=combined_df['date'], y=combined_df['mstr_to_bitcoin_20d'], mode='lines', name='20 Day MA')
 	fig.update_traces(marker=dict(color='black'), selector=dict(name='20 Day MA'))
-	fig.update_layout(width=1000, height=700)
+	fig.update_layout(width=1500, height=700)
 
 
 	# Add a horizontal gauge bar
@@ -812,11 +812,37 @@ def bar_with_plotly():
 			}
 		}
 	))
+	# Calculate the upper and lower Bollinger Bands
+	combined_df['upper_band'] = combined_df['mstr_to_bitcoin_20d'] + (combined_df['mstr_to_bitcoin_diff'].std() * 2)
+	combined_df['lower_band'] = combined_df['mstr_to_bitcoin_20d'] - (combined_df['mstr_to_bitcoin_diff'].std() * 2)
+
+
+
+	# Add filled areas for the Bollinger Bands
+	fig.add_trace(go.Scatter(
+		x=combined_df['date'],
+		y=combined_df['upper_band'],
+		mode='lines',
+		name='Upper Bollinger Band',
+		line=dict(color='rgba(173, 216, 230, 0.9)'),
+		fill=None
+	))
+
+	fig.add_trace(go.Scatter(
+		x=combined_df['date'],
+		y=combined_df['lower_band'],
+		mode='lines',
+		name='Lower Bollinger Band',
+		line=dict(color='rgba(173, 216, 230, 0.9)'),
+		fill='tonexty'
+	))
+
 
 	fig.update_traces(
 		domain={'x': [0.4, 0.9], 'y': [0.85, 0.95]},
 		selector=dict(type='indicator')
 	)
+	fig.show()
 	fig.update_layout(template='plotly_white')
 	MSTR = json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
 	return render_template('bar.html',MSTR=MSTR,cycle_comp2=cycle_comp2,cycle_comp=cycle_comp,Buyzonesbar=Buyzonesbar,cloud=cloud,Rainbow=Rainbow,BRainbow=BRainbow,Movingaverages2=Movingaverages2,corr2=corr2,corr1=corr1,YTD=YTD, Buyzones=Buyzones, Movingaverages=Movingaverages,Indicators=Indicators)
