@@ -777,7 +777,7 @@ def bar_with_plotly():
 	bins = [-3*std_dev, -std_dev, 0, std_dev, 3*std_dev]
 
 	# Create labels for the bins
-	group_names = ['-3 STD', '-1 STD', '+1 STD', '+3 STD']
+	group_names = ['-(3-2) STD', '-(2-1) STD', '+(1-2) STD', '+(3-2) STD']
 	combined_df = combined_df.dropna()
 	# Create a new column 'std_dev_bucket' with the bin labels
 	combined_df['std_dev_bucket'] = pd.cut(combined_df['mstr_to_bitcoin_diff'], bins=bins, labels=group_names)
@@ -842,7 +842,7 @@ def bar_with_plotly():
 		domain={'x': [0.4, 0.9], 'y': [0.85, 0.95]},
 		selector=dict(type='indicator')
 	)
-	fig.show()
+	fig.update_layout(width=1200, height=700)
 	fig.update_layout(template='plotly_white')
 	MSTR = json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
 	return render_template('bar.html',MSTR=MSTR,cycle_comp2=cycle_comp2,cycle_comp=cycle_comp,Buyzonesbar=Buyzonesbar,cloud=cloud,Rainbow=Rainbow,BRainbow=BRainbow,Movingaverages2=Movingaverages2,corr2=corr2,corr1=corr1,YTD=YTD, Buyzones=Buyzones, Movingaverages=Movingaverages,Indicators=Indicators)
