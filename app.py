@@ -845,6 +845,10 @@ def bar_with_plotly():
 	fig.update_layout(width=1200, height=700)
 	fig.update_layout(template='plotly_white')
 	MSTR = json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
+ 
+ 
+ 
+ 
 	return render_template('bar.html',MSTR=MSTR,cycle_comp2=cycle_comp2,cycle_comp=cycle_comp,Buyzonesbar=Buyzonesbar,cloud=cloud,Rainbow=Rainbow,BRainbow=BRainbow,Movingaverages2=Movingaverages2,corr2=corr2,corr1=corr1,YTD=YTD, Buyzones=Buyzones, Movingaverages=Movingaverages,Indicators=Indicators)
 
 	
