@@ -847,9 +847,212 @@ def bar_with_plotly():
 	MSTR = json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
  
  
+		# --- 1. Data Prep ---
+	mstr_ticker = yf.Ticker('MSTR')
+	mstr_df = mstr_ticker.history(period='max')[['Close']].reset_index()
+	mstr_df = mstr_df.rename(columns={'Close': 'mstr_price', 'Date': 'date'})
+	mstr_df['date'] = pd.to_datetime(mstr_df['date']).dt.tz_localize(None)
+	mstr_df = mstr_df.set_index('date')
+
+	gold_ticker = yf.Ticker('GC=F')
+	gold_df = gold_ticker.history(period='max')[['Close']].reset_index()
+	gold_df = gold_df.rename(columns={'Close': 'gold_price', 'Date': 'date'})
+	gold_df['date'] = pd.to_datetime(gold_df['date']).dt.tz_localize(None)
+	gold_df = gold_df.set_index('date')
+
+	ratio_df = mstr_df.join(gold_df, how='inner')
+	ratio_df['ratio'] = ratio_df['mstr_price'] / ratio_df['gold_price']
+
+	# Indicators
+	ratio_df['MA50'] = ratio_df['ratio'].rolling(50).mean()
+	ath_ratio = ratio_df['ratio'].max()
+	ath_date = ratio_df['ratio'].idxmax()
+
+	# --- 2. Visualization ---
+	fig = go.Figure()
+
+	# Main Ratio Area
+	fig.add_trace(go.Scatter(
+		x=ratio_df.index, 
+		y=ratio_df['ratio'],
+		fill='tozeroy', 
+		name='Ounces of Gold per MSTR Share',
+		line=dict(color='#ff7b00', width=2), 
+		fillcolor='rgba(255, 123, 0, 0.05)'
+	))
+
+	# 50-Day Moving Average
+	fig.add_trace(go.Scatter(
+		x=ratio_df.index, 
+		y=ratio_df['MA50'],
+		name='50D Trend',
+		line=dict(color='rgba(255, 255, 255, 0.3)', width=1.5, dash='dot')
+	))
+
+	# ATH Annotation
+	fig.add_annotation(
+		x=ath_date,
+		y=ath_ratio,
+		text=f"ATH Ratio: {ath_ratio:.3f} oz",
+		showarrow=True,
+		arrowhead=2,
+		ax=0,
+		ay=-40,
+		font=dict(color="#ff7b00", size=12)
+	)
+
+	# Layout Configuration
+	fig.update_layout(
+		title=dict(
+			text='<b>MicroStrategy vs. Gold Ratio (MSTR/XAU)</b><br><sup>The purchasing power of 1 MSTR share in Ounces of Gold</sup>',
+			font=dict(size=20, color='white'),
+			x=0.05
+		),
+		template='plotly_dark',
+		paper_bgcolor='#0e1117',
+		plot_bgcolor='#0e1117',
+		yaxis=dict(
+			type="linear", 
+			title="Gold Ounces per Share",
+			side="right",
+			gridcolor='rgba(255, 255, 255, 0.05)',
+			tickformat=".3f"
+		),
+		xaxis=dict(
+			gridcolor='rgba(255, 255, 255, 0.05)',
+			type='date',
+			# --- UPDATED RANGE SELECTOR ---
+			rangeselector=dict(
+				buttons=list([
+					dict(count=1, label="1M", step="month", stepmode="backward"),
+					dict(count=3, label="3M", step="month", stepmode="backward"),
+					dict(count=6, label="6M", step="month", stepmode="backward"),
+					dict(count=1, label="YTD", step="year", stepmode="todate"),
+					dict(count=1, label="1Y", step="year", stepmode="backward"),
+					dict(count=3, label="3Y", step="year", stepmode="backward"),
+					dict(count=5, label="5Y", step="year", stepmode="backward"),
+					dict(step="all", label="MAX")
+				]),
+				bgcolor='#1e2130',
+				activecolor='#ff7b00',
+				font=dict(size=11),
+				y=1. # Adjusted position so it doesn't hit the title
+			)
+		),
+		hovermode="x unified",
+		margin=dict(l=30, r=60, t=120, b=40), # Increased top margin for buttons
+		legend=dict(orientation="h", yanchor="bottom", y=1.0, xanchor="right", x=1)
+	)
+	fig.update_layout(height=500, width=1000)
+	fig.show()
+	MSTRGold = json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
  
+	# --- 1. Data Prep BTCGOLD ---
+	df_btc = df[['date', 'price']].copy().rename(columns={'price': 'btc_price'})
+	df_btc['date'] = pd.to_datetime(df_btc['date'])
+	df_btc = df_btc.set_index('date')
+
+	# Fetching Gold Spot (XAUUSD=X) for the most accurate currency ratio
+	gold_df = yf.Ticker('GC=F').history(period='max')[['Close']].reset_index()
+	gold_df = gold_df.rename(columns={'Close': 'gold_price', 'Date': 'date'})
+	gold_df['date'] = pd.to_datetime(gold_df['date']).dt.tz_localize(None)
+	gold_df = gold_df.set_index('date')
+
+	ratio_df = df_btc.join(gold_df, how='inner')
+	ratio_df['ratio'] = ratio_df['btc_price'] / ratio_df['gold_price']
+
+	# Indicators
+	ratio_df['MA50'] = ratio_df['ratio'].rolling(50).mean()
+	ratio_df['MA200'] = ratio_df['ratio'].rolling(200).mean()
+	ath_ratio = ratio_df['ratio'].max()
+	ath_date = ratio_df['ratio'].idxmax()
+
+	# --- 2. Visualization ---
+	fig = go.Figure()
+
+	# Main Ratio Area
+	fig.add_trace(go.Scatter(
+		x=ratio_df.index, 
+		y=ratio_df['ratio'],
+		fill='tozeroy', 
+		name='Ounces of Gold per BTC',
+		line=dict(color='#00ffce', width=2), # Neon cyan/mint for high contrast
+		fillcolor='rgba(0, 255, 206, 0.05)'
+	))
+
+	# 50-Day Moving Average
+	fig.add_trace(go.Scatter(
+		x=ratio_df.index, 
+		y=ratio_df['MA50'],
+		name='50D Moving Avg',
+		line=dict(color='rgba(255, 255, 255, 0.4)', width=1.5, dash='dot')
+	))
+
+	# 200-Day Moving Average
+	fig.add_trace(go.Scatter(
+		x=ratio_df.index,
+		y=ratio_df['MA200'],
+		name='200D Moving Avg',
+		mode='lines',
+		line=dict(color='rgba(255, 174, 66, 0.9)', width=1)
+	))
+
+	# Annotation for All-Time High
+	fig.add_annotation(
+		x=ath_date,
+		y=ath_ratio,
+		text=f"ATH: {ath_ratio:.2f} oz",
+		showarrow=True,
+		arrowhead=2,
+		arrowcolor="#FFD700",
+		ax=0,
+		ay=-40,
+		font=dict(color="#FFD700", size=12)
+	)
+
+	# Layout Configuration (Linear Scale)
+	fig.update_layout(
+		title=dict(
+			text='<b>Bitcoin vs. Gold Ratio (Linear Scale)</b><br><sup>The purchasing power of 1 BTC denominated in Ounces of Gold</sup>',
+			font=dict(size=20, color='white'),
+			x=0.05
+		),
+		template='plotly_dark',
+		paper_bgcolor='#0e1117',
+		plot_bgcolor='#0e1117',
+		yaxis=dict(
+			type="linear", # Explicitly set to linear
+			title="Gold Ounces",
+			side="right",
+			gridcolor='rgba(255, 255, 255, 0.05)',
+			zeroline=False
+		),
+		xaxis=dict(
+			title="",
+			gridcolor='rgba(255, 255, 255, 0.05)',
+			rangeselector=dict(
+				buttons=list([
+					dict(count=1, label="1M", step="month", stepmode="backward"),
+					dict(count=3, label="3M", step="month", stepmode="backward"),
+					dict(count=6, label="6M", step="month", stepmode="backward"),
+					dict(count=1, label="YTD", step="year", stepmode="todate"),
+					dict(count=1, label="1Y", step="year", stepmode="backward"),
+					dict(count=3, label="3Y", step="year", stepmode="backward"),
+					dict(count=5, label="5Y", step="year", stepmode="backward"),
+					dict(step="all", label="MAX")
+				]),
+				bgcolor='#1e2130'
+			)
+		),
+		hovermode="x unified",
+		margin=dict(l=30, r=60, t=100, b=40),
+		legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1)
+	)
+	fig.update_layout(height=500, width=1000)
+	fig.show()
+	BTCGold = json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
  
-	return render_template('bar.html',MSTR=MSTR,cycle_comp2=cycle_comp2,cycle_comp=cycle_comp,Buyzonesbar=Buyzonesbar,cloud=cloud,Rainbow=Rainbow,BRainbow=BRainbow,Movingaverages2=Movingaverages2,corr2=corr2,corr1=corr1,YTD=YTD, Buyzones=Buyzones, Movingaverages=Movingaverages,Indicators=Indicators)
+	return render_template('bar.html',BTCGold=BTCGold,MSTRGold=MSTRGold,MSTR=MSTR,cycle_comp2=cycle_comp2,cycle_comp=cycle_comp,Buyzonesbar=Buyzonesbar,cloud=cloud,Rainbow=Rainbow,BRainbow=BRainbow,Movingaverages2=Movingaverages2,corr2=corr2,corr1=corr1,YTD=YTD, Buyzones=Buyzones, Movingaverages=Movingaverages,Indicators=Indicators)
 
 	
 if __name__ == '__main__':

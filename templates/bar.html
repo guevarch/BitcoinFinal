@@ -54,6 +54,8 @@
     <div id='Rainbow' class='chart'></div>
     <div id='BRainbow' class='chart'></div>
     <div id='MSTR' class='chart'></div>
+    <div id='MSTRGold' class='chart'></div>
+    <div id='BTCGold' class='chart'></div>
     <div id='Movingaverages' class='chart'></div>
     <div id='cloud' class='chart'></div>
     <div id='Buyzonesbar' class='chart'></div>
@@ -87,7 +89,13 @@
         
         var graphs = {{Buyzonesbar | safe}};
 		Plotly.plot('Buyzonesbar',graphs,{});
-        
+
+        var graphs = {{MSTRGold | safe}};
+		Plotly.plot('MSTRGold',graphs,{});
+
+        BTCGold = {{BTCGold | safe}};
+        Plotly.plot('BTCGold',BTCGold,{});
+    
         var graphs = {{cycle_comp | safe}};
 		Plotly.plot('cycle_comp',graphs,{});
 
