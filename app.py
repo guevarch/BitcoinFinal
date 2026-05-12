@@ -427,8 +427,7 @@ def bar_with_plotly():
 	# Show the plot
 	heatmap.figure.savefig("static/heatmap.png")
 	plt.show()
-
-
+		
 	# Rainbow + Prophet
 
 	# Buy Zones
@@ -944,7 +943,6 @@ def bar_with_plotly():
 		legend=dict(orientation="h", yanchor="bottom", y=1.0, xanchor="right", x=1)
 	)
 	fig.update_layout(height=500, width=1000)
-	fig.show()
 	MSTRGold = json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
  
 	# --- 1. Data Prep BTCGOLD ---
@@ -1049,7 +1047,6 @@ def bar_with_plotly():
 		legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1)
 	)
 	fig.update_layout(height=500, width=1000)
-	fig.show()
 	BTCGold = json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
  
 	return render_template('bar.html',BTCGold=BTCGold,MSTRGold=MSTRGold,MSTR=MSTR,cycle_comp2=cycle_comp2,cycle_comp=cycle_comp,Buyzonesbar=Buyzonesbar,cloud=cloud,Rainbow=Rainbow,BRainbow=BRainbow,Movingaverages2=Movingaverages2,corr2=corr2,corr1=corr1,YTD=YTD, Buyzones=Buyzones, Movingaverages=Movingaverages,Indicators=Indicators)
