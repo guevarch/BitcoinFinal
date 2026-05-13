@@ -243,67 +243,67 @@ def bar_with_plotly():
 	fig.update_layout(template='plotly_dark')
 	YTD = json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
 
-	# Corr
+	# # Corr
 
-	tickers_list = ['BTC-USD','DX=F', '^GSPC', '^IXIC', 'GC=F']
+	# tickers_list = ['BTC-USD','DX=F', '^GSPC', '^IXIC', 'GC=F']
 
-	# Fetch data for all tickers using a for loop
-	data = {}
-	for ticker in tickers_list:
-		data[ticker] = yf.Ticker(ticker).history(period='3mo', interval='1d', actions=False)['Close']
+	# # Fetch data for all tickers using a for loop
+	# data = {}
+	# for ticker in tickers_list:
+	# 	data[ticker] = yf.Ticker(ticker).history(period='3mo', interval='1d', actions=False)['Close']
 
-	# Filter out NaN values using list comprehension
-	data = {ticker: close[~close.isna()] for ticker, close in data.items()}
+	# # Filter out NaN values using list comprehension
+	# data = {ticker: close[~close.isna()] for ticker, close in data.items()}
 
-	# Merge data using inner join
-	merge = pd.concat(data, axis=1, join='inner')
-	merge.columns = [ticker for ticker, close in data.items()]
+	# # Merge data using inner join
+	# merge = pd.concat(data, axis=1, join='inner')
+	# merge.columns = [ticker for ticker, close in data.items()]
 
-	# Rename columns
-	merge = merge.rename(columns={"BTC-USD": "BTC", "DX=F": "DXY", "^GSPC": "S&P500", "^IXIC": "Nasdaq", "GC=F": "Gold"})
-	assets = [('DXY', 'DXY/BTC'), ('S&P500', 'S&P500/BTC'), ('Nasdaq', 'Nasdaq/BTC'), ('Gold', 'Gold/BTC')]
+	# # Rename columns
+	# merge = merge.rename(columns={"BTC-USD": "BTC", "DX=F": "DXY", "^GSPC": "S&P500", "^IXIC": "Nasdaq", "GC=F": "Gold"})
+	# assets = [('DXY', 'DXY/BTC'), ('S&P500', 'S&P500/BTC'), ('Nasdaq', 'Nasdaq/BTC'), ('Gold', 'Gold/BTC')]
 
-	# Use a for loop to calculate the correlation for each asset pair
-	correlations = {}
-	for asset, col_name in assets:
-		correlations[col_name] = merge['BTC'].rolling(3).corr(merge[asset])
+	# # Use a for loop to calculate the correlation for each asset pair
+	# correlations = {}
+	# for asset, col_name in assets:
+	# 	correlations[col_name] = merge['BTC'].rolling(3).corr(merge[asset])
 
-	# Use the assign method to add the correlations as new columns to the DataFrame
-	merge = merge.assign(**correlations).dropna().reset_index()
-	corr_matrix=merge.drop(columns=['DXY/BTC','S&P500/BTC', 'Nasdaq/BTC', 'Gold/BTC'])
-	corr_matrix = corr_matrix.corr().round(2)
-	corr_matrix = px.imshow(corr_matrix,color_continuous_scale='Oryel', text_auto=True, aspect="auto")
-	corr_matrix.update_layout(height=400, width=950, title_text="Correlation Matrix")
-	corr1 = json.dumps(corr_matrix, cls=plotly.utils.PlotlyJSONEncoder)
-	corr_matrix.write_html("static/corr1.html")
-	merge=merge.tail(30)
-	fig = make_subplots(
-		rows=4, cols=1,start_cell="bottom-left",shared_xaxes=True, vertical_spacing=0.01, row_heights=[0.04, 0.04,0.04,0.04],
-		subplot_titles=("DXY/BTC", "S&P500/BTC", "Nasdaq/BTC", "Gold/BTC"))
+	# # Use the assign method to add the correlations as new columns to the DataFrame
+	# merge = merge.assign(**correlations).dropna().reset_index()
+	# corr_matrix=merge.drop(columns=['DXY/BTC','S&P500/BTC', 'Nasdaq/BTC', 'Gold/BTC'])
+	# corr_matrix = corr_matrix.corr().round(2)
+	# corr_matrix = px.imshow(corr_matrix,color_continuous_scale='Oryel', text_auto=True, aspect="auto")
+	# corr_matrix.update_layout(height=400, width=950, title_text="Correlation Matrix")
+	# corr1 = json.dumps(corr_matrix, cls=plotly.utils.PlotlyJSONEncoder)
+	# corr_matrix.write_html("static/corr1.html")
+	# merge=merge.tail(30)
+	# fig = make_subplots(
+	# 	rows=4, cols=1,start_cell="bottom-left",shared_xaxes=True, vertical_spacing=0.01, row_heights=[0.04, 0.04,0.04,0.04],
+	# 	subplot_titles=("DXY/BTC", "S&P500/BTC", "Nasdaq/BTC", "Gold/BTC"))
 
-	fig.add_trace(go.Bar(x=merge['Date'], y=merge['DXY/BTC'],
-						marker=dict(color=merge['DXY/BTC'], coloraxis="coloraxis")),
-				1, 1)
-	fig.add_trace(go.Bar(x=merge['Date'], y=merge['S&P500/BTC'],
-						marker=dict(color=merge['S&P500/BTC'], coloraxis="coloraxis")),
-				2, 1)
+	# fig.add_trace(go.Bar(x=merge['Date'], y=merge['DXY/BTC'],
+	# 					marker=dict(color=merge['DXY/BTC'], coloraxis="coloraxis")),
+	# 			1, 1)
+	# fig.add_trace(go.Bar(x=merge['Date'], y=merge['S&P500/BTC'],
+	# 					marker=dict(color=merge['S&P500/BTC'], coloraxis="coloraxis")),
+	# 			2, 1)
 
-	fig.add_trace(go.Bar(x=merge['Date'], y=merge['Nasdaq/BTC'],
-						marker=dict(color=merge['Nasdaq/BTC'], coloraxis="coloraxis")),
-				3, 1)
+	# fig.add_trace(go.Bar(x=merge['Date'], y=merge['Nasdaq/BTC'],
+	# 					marker=dict(color=merge['Nasdaq/BTC'], coloraxis="coloraxis")),
+	# 			3, 1)
 
-	fig.add_trace(go.Bar(x=merge['Date'], y=merge['Gold/BTC'],
-						marker=dict(color=merge['Gold/BTC'], coloraxis="coloraxis")),
-				4, 1)
-	fig.update_layout(
-		margin=dict(l=20, r=20, t=70, b=20),
-	)
-	fig.update_layout(coloraxis=dict(colorscale='Oryel'), showlegend=False)
-	fig.update_yaxes(nticks=3)
-	fig.update_xaxes(nticks=25)
-	fig.update_layout(height=500, width=1000, title_text="30 Day Correlation")
-	fig.update_layout(template='plotly_dark')
-	corr2 = json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
+	# fig.add_trace(go.Bar(x=merge['Date'], y=merge['Gold/BTC'],
+	# 					marker=dict(color=merge['Gold/BTC'], coloraxis="coloraxis")),
+	# 			4, 1)
+	# fig.update_layout(
+	# 	margin=dict(l=20, r=20, t=70, b=20),
+	# )
+	# fig.update_layout(coloraxis=dict(colorscale='Oryel'), showlegend=False)
+	# fig.update_yaxes(nticks=3)
+	# fig.update_xaxes(nticks=25)
+	# fig.update_layout(height=500, width=1000, title_text="30 Day Correlation")
+	# fig.update_layout(template='plotly_dark')
+	# corr2 = json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
 
 	# Moving Averages
 
@@ -1049,9 +1049,8 @@ def bar_with_plotly():
 	fig.update_layout(height=500, width=1000)
 	BTCGold = json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
  
-	return render_template('bar.html',BTCGold=BTCGold,MSTRGold=MSTRGold,MSTR=MSTR,cycle_comp2=cycle_comp2,cycle_comp=cycle_comp,Buyzonesbar=Buyzonesbar,cloud=cloud,Rainbow=Rainbow,BRainbow=BRainbow,Movingaverages2=Movingaverages2,corr2=corr2,corr1=corr1,YTD=YTD, Buyzones=Buyzones, Movingaverages=Movingaverages,Indicators=Indicators)
+	return render_template('bar.html',BTCGold=BTCGold,MSTRGold=MSTRGold,MSTR=MSTR,cycle_comp2=cycle_comp2,cycle_comp=cycle_comp,Buyzonesbar=Buyzonesbar,cloud=cloud,Rainbow=Rainbow,BRainbow=BRainbow,Movingaverages2=Movingaverages2,YTD=YTD, Buyzones=Buyzones, Movingaverages=Movingaverages,Indicators=Indicators)
 
 	
 if __name__ == '__main__':
 	app.run()
-
